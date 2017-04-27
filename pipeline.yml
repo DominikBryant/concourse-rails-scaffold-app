@@ -1,0 +1,55 @@
+resources:
+  - name: git-repository
+    type: git
+    source:
+      uri: "https://github.com/DominikBryant/rails-scaffold-app"
+
+jobs:
+- name: capybara-tests
+  plan:
+  - get: git-repository
+    trigger: true
+  - task: capybara-tests
+    config:
+      platform: linux
+
+      inputs:
+      - name: git-repository
+
+      image_resource:
+        type: docker-image
+        source: { repository: ruby, tag: 2.4.1 }
+
+      run:
+        path: sh
+        dir: git-repository
+        args:
+          - -exc
+          - |
+            apt-get update -qq && apt-get install -y build-essential nodejs
+            bundle install
+            rails test
+- name: breakman
+  plan:
+  - get: git-repository
+    trigger: true
+  - task: breakman
+    config:
+      platform: linux
+
+      inputs:
+      - name: git-repository
+
+      image_resource:
+        type: docker-image
+        source: { repository: ruby, tag: 2.4.1 }
+
+      run:
+        path: sh
+        dir: git-repository
+        args:
+          - -exc
+          - |
+            apt-get update -qq && apt-get install -y build-essential nodejs
+            bundle install
+            bundle exec brakeman -z
